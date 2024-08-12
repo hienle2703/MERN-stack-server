@@ -218,7 +218,7 @@ export const getAllUsers = asyncError(async (req, res, next) => {
 // Admin Role only - To delete a user
 export const deleteUser = asyncError(async (req, res, next) => {
   const { id } = req.params;
-  
+
   const user = await User.findById(id);
 
   if (!user) {
@@ -226,7 +226,17 @@ export const deleteUser = asyncError(async (req, res, next) => {
   }
 
   if (user.role === "admin") {
-    return next(new ErrorHandler("You can't delete admin user. Please contact your higher manager to know more.", 400));
+    return next(
+      new ErrorHandler(
+        "You can't delete admin user. Please contact your higher manager to know more.",
+        400
+      )
+    );
+  }
+
+  // Xóa avatar của user trên cloudinary
+  if (user?.avatar?.public_id) {
+    await cloudinary.v2.uploader.destroy(user.avatar.public_id);
   }
 
   await user.deleteOne();
