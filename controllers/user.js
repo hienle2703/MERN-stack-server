@@ -204,3 +204,35 @@ export const resetPassword = asyncError(async (req, res, next) => {
     message: "Password reset successfully",
   });
 });
+
+// Admin Role only - To get all users
+export const getAllUsers = asyncError(async (req, res, next) => {
+  const users = await User.find({ email: { $ne: req.user.email } }); // $ne là not equal - tìm ra những user có email khác với user hiện tại
+
+  res.status(200).json({
+    success: true,
+    users,
+  });
+});
+
+// Admin Role only - To delete a user
+export const deleteUser = asyncError(async (req, res, next) => {
+  const { id } = req.params;
+  
+  const user = await User.findById(id);
+
+  if (!user) {
+    return next(new ErrorHandler("User not found", 404));
+  }
+
+  if (user.role === "admin") {
+    return next(new ErrorHandler("You can't delete admin user. Please contact your higher manager to know more.", 400));
+  }
+
+  await user.deleteOne();
+
+  res.status(200).json({
+    success: true,
+    message: "User deleted successfully",
+  });
+});
